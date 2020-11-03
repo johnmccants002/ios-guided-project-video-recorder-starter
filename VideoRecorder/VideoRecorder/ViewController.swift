@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import AVFoundation
 
 class ViewController: UIViewController {
 	
@@ -21,10 +22,34 @@ class ViewController: UIViewController {
 		// TODO: get permission
 		
 		showCamera()
+        requestPermission()
 		
 	}
 	
 	private func showCamera() {
 		performSegue(withIdentifier: "ShowCamera", sender: self)
 	}
+    
+    private func requestPermission() {
+        AVCaptureDevice.requestAccess(for: .video) { (isGranted) in
+            guard isGranted else { return }
+            preconditionFailure("UI: Tell")
+            DispatchQueue.main.async {
+                self.showCamera()
+            }
+        }
+        switch AVCaptureDevice.authorizationStatus(for: .video) {
+        case .notDetermined:
+            preconditionFailure("User did not give or deny permission. Not determined.")
+        case .denied:
+            preconditionFailure("User denied using the camera")
+        case .authorized:
+            showCamera()
+            
+        case .restricted:
+            preconditionFailure("Unable to use camera because of restriction")
+        default:
+            preconditionFailure("Tell the user they can't use the app unless they give permission use the camera")
+        }
+    }
 }
