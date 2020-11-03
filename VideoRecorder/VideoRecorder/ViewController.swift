@@ -22,7 +22,7 @@ class ViewController: UIViewController {
 		// TODO: get permission
 		
 		showCamera()
-        requestPermission()
+        requestPermissionAndShowCamera()
 		
 	}
 	
@@ -30,14 +30,17 @@ class ViewController: UIViewController {
 		performSegue(withIdentifier: "ShowCamera", sender: self)
 	}
     
-    private func requestPermission() {
+    private func requestVideoPermission() {
         AVCaptureDevice.requestAccess(for: .video) { (isGranted) in
-            guard isGranted else { return }
-            preconditionFailure("UI: Tell")
+            guard isGranted else { preconditionFailure("UI: Tell")}
+
             DispatchQueue.main.async {
                 self.showCamera()
             }
         }
+    }
+    
+    private func requestPermissionAndShowCamera() {
         switch AVCaptureDevice.authorizationStatus(for: .video) {
         case .notDetermined:
             preconditionFailure("User did not give or deny permission. Not determined.")
