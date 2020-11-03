@@ -9,10 +9,13 @@
 import UIKit
 import AVFoundation
 
-class CameraViewController: UIViewController, AVCaptureFileOutputRecordingDelegate {
+class CameraViewController: UIViewController {
     
     lazy private var captureSession = AVCaptureSession()
     lazy private var fileOutput = AVCaptureMovieFileOutput()
+    
+    lazy private var player = AVPlayer()
+    private var playerView: VideoPlayerView!
 
     @IBOutlet var recordButton: UIButton!
     @IBOutlet var cameraView: CameraPreviewView!
@@ -36,6 +39,26 @@ class CameraViewController: UIViewController, AVCaptureFileOutputRecordingDelega
         super.viewDidDisappear(animated)
         
         captureSession.stopRunning()
+    }
+    
+    func playMovie(url: URL) {
+        player.replaceCurrentItem(with: AVPlayerItem(url: url))
+        if playerView == nil {
+            playerView = VideoPlayerView()
+            playerView.player = player
+            
+            var topRect = view.bounds
+            topRect.size.width /= 4
+            topRect.size.height /= 4
+            topRect.origin.y = view.layoutMargins.top
+            topRect.origin.x = view.bounds.size.width - topRect.size.width
+            
+            playerView.frame = topRect
+            view.addSubview(playerView)
+        }
+        
+        player.play()
+        
     }
     
     private func setUpCamera() {
@@ -95,5 +118,26 @@ class CameraViewController: UIViewController, AVCaptureFileOutputRecordingDelega
 		let fileURL = documentsDirectory.appendingPathComponent(name).appendingPathExtension("mov")
 		return fileURL
 	}
+    
+    func updateViews() {
+        recordButton.isSelected = fileOutput.isRecording
+    }
+}
+
+extension CameraViewController: AVCaptureFileOutputRecordingDelegate {
+    func fileOutput(_ output: AVCaptureFileOutput, didStartRecordingTo fileURL: URL, from connections: [AVCaptureConnection]) {
+        updateViews()
+    }
+    
+    func fileOutput(_ output: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: Error?) {
+        if let error = error {
+            print("Error saving video: \(error)")
+        }
+        print("Video URL: \(outputFileURL)")
+        playMovie(url: outputFileURL)
+        updateViews()
+    }
+    
+    
 }
 
